@@ -71,14 +71,38 @@ const logoutUser = asyncHandler(async (req, res) => {
 // route GET /api/users/profile
 // @access Private
 const getUserProfile = asyncHandler(async (req, res) => {
-  res.status(200).json({ message: 'User Profile' });
+  const user = {
+    _id: req.user._id,
+    username: req.user.username,
+    email: req.user.email,
+  };
+
+  res.status(200).json(user);
 });
 
 // @desc Update user profile
 // route PUT /api/users/profile
 // @access Private
 const updateUserProfile = asyncHandler(async (req, res) => {
-  res.status(200).json({ message: 'Update user profile' });
+  const user = await User.findById(req.user._id);
+
+  if (user) {
+    user.username = req.body.username || user.username;
+    user.email = req.body.email || user.email;
+
+    if (req.body.password) {
+      user.password = req.body.password;
+    }
+
+    const updatedUser = await user.save();
+
+    updatedUser.password = undefined;
+
+    res.status(200).json(updatedUser);
+  } else {
+    res.status(404);
+    throw new Error('User not found');
+  }
 });
 
 export default {
